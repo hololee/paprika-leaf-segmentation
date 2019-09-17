@@ -3,6 +3,8 @@ import numpy as np
 import os
 import config_etc
 
+from PIL import Image
+
 
 class DataGen:
 
@@ -11,8 +13,12 @@ class DataGen:
 
         self.dir1 = '/data1/LJH/paf_test/train_cnn/normal'
         self.dir2 = '/data1/LJH/paf_test/train_target/normal'
-        all_file_list = os.listdir(self.dir)
-        all_file_list.sort()
+
+        all_img_list = os.listdir(self.dir1)
+        all_img_list.sort()
+
+        all_target_list = os.listdir(self.dir2)
+        all_target_list.sort()
 
         self.rgbs_name = []
         self.fgs_name = []
@@ -22,16 +28,15 @@ class DataGen:
 
         # slect origin images.
 
-        for titles in all_file_list:
-            if '_rgb' in titles:
-                print(titles + ": color image")
-                # color images
-                self.rgbs_name.append(titles)
+        for titles in all_img_list:
+            print(titles + ": color image")
+            # color images
+            self.rgbs_name.append(titles)
 
-            if '_fg' in titles:
-                print(titles + ": foreground")
-                # foregrounds
-                self.fgs_name.append(titles)
+        for titles in all_target_list:
+            print(titles + ": foreground")
+            # foregrounds
+            self.fgs_name.append(titles)
 
         print("\n==========================================")
         # number of total images.
@@ -41,7 +46,7 @@ class DataGen:
 
     def load_images(self):
         for image_names in self.rgbs_name:
-            real_path = self.dir + "/" + image_names
+            real_path = self.dir1 + "/" + image_names
             # load images.
             self.rgb_images.append(imread(real_path, mode='RGB'))
 
@@ -49,13 +54,12 @@ class DataGen:
 
     def load_labels(self):
         for image_names in self.fgs_name:
-            real_path = self.dir + "/" + image_names
+            real_path = self.dir2 + "/" + image_names
             # load images.
             self.fg_images.append(imread(real_path, mode='L'))
 
         # change range  0 to 1
         # self.fg_images = self.fg_images / np.amax(self.fg_images)
-
 
         return self.fg_images
 

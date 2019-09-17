@@ -13,7 +13,7 @@ import config_etc
 import scipy.misc
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 
 def get_shape(text, input):
@@ -62,6 +62,8 @@ gen_convolution = method.layers(method.TYPE_NORMAL, gen_convolution, 64, "layer2
 # step 2
 gen_convolution = method.layers(method.TYPE_NORMAL, gen_convolution, 128, "layer3", method.FUNC_RELU,
                                 BatchNorm(is_train=ph.is_train, use_batch_norm=True), pooling=None)
+gen_convolution = method.layers(method.TYPE_NORMAL, gen_convolution, 128, "layer3_1", method.FUNC_RELU,
+                                BatchNorm(is_train=ph.is_train, use_batch_norm=True), pooling=None)
 gen_convolution = method.layers(method.TYPE_ATROUS, gen_convolution, 128, "layer4_pooling", method.FUNC_RELU,
                                 BatchNorm(is_train=ph.is_train, use_batch_norm=True), pooling={'size': 2, 'stride': 2})
 
@@ -70,7 +72,9 @@ gen_convolution = method.layers(method.TYPE_NORMAL, gen_convolution, 256, "layer
                                 BatchNorm(is_train=ph.is_train, use_batch_norm=True), pooling=None)
 gen_convolution = method.layers(method.TYPE_NORMAL, gen_convolution, 256, "layer6", method.FUNC_RELU,
                                 BatchNorm(is_train=ph.is_train, use_batch_norm=True), pooling=None)
-gen_convolution = method.layers(method.TYPE_ATROUS, gen_convolution, 256, "layer7_pooling", method.FUNC_RELU,
+gen_convolution = method.layers(method.TYPE_NORMAL, gen_convolution, 256, "layer6_1", method.FUNC_RELU,
+                                BatchNorm(is_train=ph.is_train, use_batch_norm=True), pooling=None)
+gen_convolution = method.layers(method.TYPE_NORMAL, gen_convolution, 256, "layer7_pooling", method.FUNC_RELU,
                                 BatchNorm(is_train=ph.is_train, use_batch_norm=True), pooling={'size': 2, 'stride': 2})
 
 # step 3
@@ -98,12 +102,15 @@ gen_convolution = method.bi_linear_interpolation(gen_convolution, original_map_s
 # predict
 predict_images = gen_convolution
 # loss
-flat_logits = tf.reshape(tensor=predict_images, shape=(-1, 1))
-flat_labels = tf.reshape(tensor=ph.ground_truth, shape=(-1, 1))
+# (batch_size, num_classes)
+# num_classes = 2 : background, plant
+
+flat_logits = tf.reshape(tensor=predict_images, shape=(-1, 2))
+flat_labels = tf.reshape(tensor=ph.ground_truth, shape=(-1, 2))
 
 # more than two classes, use soft_max_cross_entropy.
 # less than two classes, use sigmoid_cross_entropy.
-cross_entropies = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(logits=flat_logits,
+cross_entropies = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(logits=flat_logits,
                                                                         labels=flat_labels))
 
 optimizer = tf.train.AdamOptimizer(learning_rate=ph.learning_rate).minimize(cross_entropies)
@@ -124,14 +131,21 @@ with tf.Session() as sess:
             # # TODO test
             # lo, la = sess.run([flat_logits, flat_labels], feed_dict={ph.input_data: batch_x, ph.ground_truth: batch_y,ph.is_train: True})
 
+            learn_rate = config_etc.LEARNING_RATE
+
+            if epoch > 20:
+                learn_rate = config_etc.LEARNING_RATE_v2
+            elif epoch > 30:
+                learn_rate = config_etc.LEARNING_RATE_v3
+
             # train.
             extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
             _, _ = sess.run([optimizer, extra_update_ops], feed_dict={ph.input_data: batch_x,
                                                                       ph.ground_truth: batch_y,
                                                                       ph.is_train: True,
-                                                                      ph.learning_rate: config_etc.LEARNING_RATE})
+                                                                      ph.learning_rate: learn_rate})
 
-            if batch_count % 4 == 0:
+            if batch_count % 5 == 0:
                 # calculate loss.
                 loss = sess.run(cross_entropies, feed_dict={ph.input_data: batch_x,
                                                             ph.ground_truth: batch_y,
@@ -173,5 +187,5 @@ with tf.Session() as sess:
                                                   ph.input_data: np.expand_dims(dataG.load_images()[index], axis=0),
                                                   ph.is_train: False})
 
-        scipy.misc.imsave('/data1/LJH/cvpppnet/A1_predict/plant{}_out.png'.format(index),
+        scipy.misc.imsave('/data1/LJH/paf_test/train_result/leaf{}_out.png'.format(index),
                           np.squeeze(total_image_result_predict))
