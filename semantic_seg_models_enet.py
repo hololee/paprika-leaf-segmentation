@@ -13,7 +13,7 @@ import time
 current_milli_time = lambda: int(round(time.time() * 1000))
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 ## ready dataset .
 dataG = DataGen()
@@ -90,6 +90,40 @@ net = md.layer_enet_bottle_neck(net, layer_type={"ver": 2, "type": "dilated", "d
                                                  "target_dim": 128, "projection_ratio": 4, "dilated_rate": 16},
                                 training=ph.is_train,
                                 name="bottleneck2_8")
+
+
+#==== ver3
+net = md.layer_enet_bottle_neck(net, layer_type={"ver": 2, "type": "regular", "down_sampling": False, "conv_size": 3,
+                                                 "target_dim": 128, "projection_ratio": 4}, training=ph.is_train,
+                                name="bottleneck3_1")
+net = md.layer_enet_bottle_neck(net, layer_type={"ver": 2, "type": "dilated", "down_sampling": False, "conv_size": 3,
+                                                 "target_dim": 128, "projection_ratio": 4, "dilated_rate": 2},
+                                training=ph.is_train,
+                                name="bottleneck3_2")
+net = md.layer_enet_bottle_neck(net, layer_type={"ver": 2, "type": "asymmetric", "down_sampling": False, "conv_size": 3,
+                                                 "target_dim": 128, "projection_ratio": 4, "asymmetric_rate": 5},
+                                training=ph.is_train,
+                                name="bottleneck3_3")
+net = md.layer_enet_bottle_neck(net, layer_type={"ver": 2, "type": "dilated", "down_sampling": False, "conv_size": 3,
+                                                 "target_dim": 128, "projection_ratio": 4, "dilated_rate": 4},
+                                training=ph.is_train,
+                                name="bottleneck3_4")
+net = md.layer_enet_bottle_neck(net, layer_type={"ver": 2, "type": "regular", "down_sampling": False, "conv_size": 3,
+                                                 "target_dim": 128, "projection_ratio": 4}, training=ph.is_train,
+                                name="bottleneck3_5")
+net = md.layer_enet_bottle_neck(net, layer_type={"ver": 2, "type": "dilated", "down_sampling": False, "conv_size": 3,
+                                                 "target_dim": 128, "projection_ratio": 4, "dilated_rate": 8},
+                                training=ph.is_train,
+                                name="bottleneck3_6")
+net = md.layer_enet_bottle_neck(net, layer_type={"ver": 2, "type": "asymmetric", "down_sampling": False, "conv_size": 3,
+                                                 "target_dim": 128, "projection_ratio": 4, "asymmetric_rate": 5},
+                                training=ph.is_train,
+                                name="bottleneck3_7")
+net = md.layer_enet_bottle_neck(net, layer_type={"ver": 2, "type": "dilated", "down_sampling": False, "conv_size": 3,
+                                                 "target_dim": 128, "projection_ratio": 4, "dilated_rate": 16},
+                                training=ph.is_train,
+                                name="bottleneck3_8")
+
 # ==== ver 4
 net = md.layer_enet_bottle_neck(net,
                                 layer_type={"ver": 4, "type": "transpose_conv", "down_sampling": False, "conv_size": 3,
