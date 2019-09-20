@@ -5,6 +5,8 @@
  - **_sample_data_** is sample leaf images for segmentation.  
  
  - **_sample_result_** is segmentation result of sample leaf images.
+ 
+<h4>this result is just train set result. not test set<h4>
   
  
  
