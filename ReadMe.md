@@ -9,7 +9,7 @@
 <h4>this result is just train set result. not test set<h4>
   
  ***
- ![Alt text](paf_test/sample_result/result_2.png "one sample test result")
+ ![Alt text](./sample_result/result_2.png "one sample test result")
  
  
  
